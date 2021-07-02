@@ -1,0 +1,55 @@
+import pandas as pd
+meta = pd.read_csv("resources/meta.csv")
+samples = meta.ID.to_list()
+
+rule all:
+    input: 
+        expand("results/{samples}_quant/quant.sf",
+        samples = samples),
+        "results/plots/histogram.png"
+
+rule trim:
+    input: 
+        R1 = "resources/raw/{sample}_r1.fastq.gz",
+        R2 = "resources/raw/{sample}_r2.fastq.gz",
+        adapter = "resources/illumina_multiplex.fa"
+    output:
+        temp("trimmed/trimmed.{sample}_fwd.fastq"),
+        temp("trimmed/trimmed.{sample}_fwd_UP.fastq"),
+        temp("trimmed/trimmed.{sample}_rev.fastq"),
+        temp("trimmed/trimmed.{sample}_rev_UP.fastq")
+    conda: "envs/snakemake-tutorial.yaml"
+    log: "logs/trim_{sample}.log"
+    shell: 
+        "trimmomatic PE {input.R1} {input.R2} {output} ILLUMINACLIP:{input.adapter}:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:20 MINLEN:36 -threads 1 &> {log}"
+
+rule map:
+    input:
+        fwd = "trimmed/trimmed.{sample}_fwd.fastq",
+        rev = "trimmed/trimmed.{sample}_rev.fastq",
+    output:
+        temp("results/{sample}.bam")
+    params:
+        ref = "resources/HumanTxSmall"
+    conda: "envs/snakemake-tutorial.yaml"
+    threads: 32
+    log: "logs/map_{sample}.log"
+    shell:
+        "bowtie2 -x {params.ref} -1 {input.fwd} -2 {input.rev} -p {threads} 2> {log} | samtools view -Sb > {output} 2>> {log}"
+
+rule quant:
+    input:
+        sample = "results/{sample}.bam",
+        ref = "resources/HumanTxSmall.fasta"
+    output:
+        out = directory("results/data/{sample}_quant"),
+        quantFile = protected("results/data/{sample}_quant/quant.sf")
+    conda: "envs/snakemake-tutorial.yaml"
+    threads: 32
+    log: "logs/quant_{sample}.log"
+    shell:
+        "salmon quant -l ISR -p {threads} -t {input.ref} -a {input.sample} -o {output.out} &> {log}"
+
+
+include: "rules/tximport.smk"
+include: "rules/plotHist.smk"

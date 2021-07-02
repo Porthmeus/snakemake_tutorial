@@ -1,0 +1,144 @@
+---
+title: "Snakemake setup guide"
+author: "Jan Taubenheim"
+date: "`r Sys.Date()`"
+output:
+    html_document:
+        toc: true
+---
+```{r setup, include =FALSE}
+
+knitr::opts_chunk$set(warning=FALSE, message=FALSE, eval = FALSE, fig.width = 10, fig.height=5)
+
+```
+
+
+
+# Installation of snakemake
+
+There are several ways to install snakemake which are documented on the [snakemake homepage](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html).
+
+However, easiest installation is via [conda](https://docs.conda.io/en/latest/index.html). Conda is an independent package management environment which provides easy installation of a wide variety of packages and programs - and comes in handy when using snakemake later on. Install miniconda (a minimal version of conda) by downloading the [latest installer](https://docs.conda.io/en/latest/miniconda.html).
+
+NOTE: there is a module for miniconda installed on the cluster - I had problems using it, but theoretically it should be sufficient to load the module instead of installing conda again.
+
+After this is done, install mamba - an improved package manager over conda, especially for downloading and solving dependencies:
+
+```{bash mambaInstall}
+# installs mamba into the "base" environment of conda
+conda install -n base -c conda-forge mamba
+```
+
+Afterwards install snakemake with mamba:
+
+```{bash snakemakeInstall}
+# activate the base environment
+conda activate base
+# install snakemake into a new environment called "snakemake"
+mamba create -c conda-forge -c bioconda -n snakemake snakemake
+```
+
+
+## Installation of tools used in the tutorial
+
+We will use conda as well to install all necessary tools which we need for this tutorial. The packages will be installed into a new environment called "snakemake-tutorial". All desired programs for installation are listed in a YAML file for easy installation of a larger list of programs at once.
+
+```{bash}
+# activate the base environment
+conda activate base
+# install the necessary tools - including snakemake
+mamba create -n snakemake-tutoral --file snakemake-tutorial.yaml
+```
+
+
+# Cluster setup (SLURM)
+
+One of snakemakes huge advantages is the possibility to define resource allocation per job and submit each job individually to the cluster. In this way, only those resources needed for a specific job is allocated while snakemake handles the dependencies of the different jobs - this is very effective and enables easy parallelization of a pipeline.
+
+Snakemake has a generic [cluster-mode](https://snakemake.readthedocs.io/en/stable/executing/cluster.html) which submits jobs to the cluster queue via a specific command, but for fine tuned interaction some setup is required. Fortunately, the heavy lifting is provided by the community.
+
+## Install snakemake
+
+Follow the instructions above and install snakemake via conda
+
+## Create a cluster profile to use with snakemake
+
+2. Get cookiecutter to easily setup the cluster execution for snakemake:
+
+```{bash installCookie}
+conda install -c conda-forge cookiecutter
+```
+
+3. Setup a profile for cluster execution of snakemake. If not present, create a config directory for snakemake in and move to the directory
+```{bash makeConfigDir}
+mkdir /home/sukem***/.config/snakemake/`
+cd /home/sukem***/.config/snakemake/
+```
+
+4. Use cookiecutter to download the files from the [snakemake profiles github](https://github.com/Snakemake-Profiles/slurm) into the directory and configure your options:
+```{bash createProfile}
+cookiecutter https://github.com/Snakemake-Profiles/slurm.git
+```
+5. Go through the interactive configuration (leave everything to defaults) - choose your profile name
+    * `sbatch_defaults` -  defines which additional arguments should be parsed to slurm each time the profile is used
+    * `cluster_config` - similar to the snakemake option - use the snakemake option, as it is more flexible - see recommended configurations below
+    * `advanced_argument_conversion` - will fail most likely, so leave it to "no"
+    * `cluster_name` - needed if there is more than one slurm cluster running on the same architecture (not the case in CAU)
+
+The installation process should have created a several files in the directory including a config.yaml file. This file is the configuration file for snakemake behavior when invoking snakemake with this profile.
+
+### Recommended configurations
+
+After creating the profile it is useful to make some adjustments to the cluster behavior when using the profile.
+
+1. Define a cluster-config file - sounds similar, but in this file one can define the resources allocated to each job individually. See below for more information about this file.
+
+`cluster-config: /relative/path/from/project.yaml`
+
+2. Set the conda usage options - if you opt for using conda to manage the software
+
+`use-conda: true`
+
+3. Set the conda prefix to a location of your liking. Snakemake will by default download and install the software it depends on in a hidden directory ".snakemake" within the project directory. This will lead to many redundant environments if similar environments are used across different projects. The conda prefix defines where the environments should be stored (and snakemake will look for if it needs an environment) - a common location across different projects prevents redundant installation of software!
+
+`conda-prefix: /work_beegfs/sukem***/snakemake_envs/`
+
+4. You might want adjust the default behavior for slurm jobs.
+   * `restart-times` - tells snakemake how often a job should be restarted before it is declared failed - I set it usually to 0
+   * `max-jobs-per-second` - how many jobs per second should be launched at maximum, leave at least some time between jobs, so that the cluster does not hiccup on it
+   * `max-status-checks-per-second` - how often should snakemake check the status of the jobs?
+   * `local-cores` - how many cores should be used to run snakemake's head job
+   * `latency-wait` - determines how long snakemake waits after a job has finished without a non-zero exit status, but the output file is missing - sometimes it takes some time for the system to "see" the file on the filesystem
+
+# Cluster-config
+
+A [cluster config](https://snakemake.readthedocs.io/en/stable/snakefiles/configuration.html?#cluster-configuration-deprecated) file can be used to specify the allocated resources for a job submitted by snakemake. It can be specified as YAML or JSON file and takes parameters which should be submitted to sbatch command. Here is an example:
+```{yaml}
+
+__default__:                                                                     
+    mem: 16000                                                                   
+    nodes: 1                                                                     
+    ntasks-per-node: 1                                                           
+    cpus-per-task: 8                                                             
+    time: "04:00:00"                                                             
+    partition: all                                                               
+    job-name: "{rule}"                                                           
+    output: "{rule}.out"
+
+trim:
+    mem: 8000
+    cpus-per-task: 8
+    time: "02:00:00"
+
+map:
+    mem: 16000
+    cpus-per-task: 16
+    time: "08:00:00"
+
+```
+
+The `__default__` statement sets the defaults, these are the settings which are inherited by all other jobs specifications. The `trim` statement only overwrites the `mem`, the `cpus-per-task` and the `time` statements, everything else is taken over from the defaults. One can also use specific wildcards like the `{rule}` which is referring to the rule name.
+
+NOTE: the cluster configuration is deprecated now, however, I find it the most convenient way to control the allocation of resources to each job. The alternative, would be to specify this in each rule separately - which comes with the drawback, having to define that for every rule.
+
+

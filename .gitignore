@@ -1,0 +1,7 @@
+# ignore results, log and temporary files
+
+tutorial_snakemake/logs
+tutorial_snakemake/results
+tutorial_snakemake/*.log
+tutorial_snakemake/.snakemake
+

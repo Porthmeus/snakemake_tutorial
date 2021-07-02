@@ -1,0 +1,10 @@
+FileNotFoundError in line 2 of /home/taube/Work/SnakemakeTutorial/tutorial_snakemake/workflow/snakefile:
+[Errno 2] No such file or directory: 'resources/meta.csv'
+  File "/home/taube/Work/SnakemakeTutorial/tutorial_snakemake/workflow/snakefile", line 2, in <module>
+  File "/home/taube/miniconda3/envs/snakemake/lib/python3.9/site-packages/pandas/io/parsers.py", line 688, in read_csv
+  File "/home/taube/miniconda3/envs/snakemake/lib/python3.9/site-packages/pandas/io/parsers.py", line 454, in _read
+  File "/home/taube/miniconda3/envs/snakemake/lib/python3.9/site-packages/pandas/io/parsers.py", line 948, in __init__
+  File "/home/taube/miniconda3/envs/snakemake/lib/python3.9/site-packages/pandas/io/parsers.py", line 1180, in _make_engine
+  File "/home/taube/miniconda3/envs/snakemake/lib/python3.9/site-packages/pandas/io/parsers.py", line 2010, in __init__
+  File "pandas/_libs/parsers.pyx", line 382, in pandas._libs.parsers.TextReader.__cinit__
+  File "pandas/_libs/parsers.pyx", line 674, in pandas._libs.parsers.TextReader._setup_parser_source

@@ -1,0 +1,360 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>Snakemake Tutorial</title>
+
+		<link rel="stylesheet" href="reveal.js/dist/reset.css">
+		<link rel="stylesheet" href="reveal.js/dist/reveal.css">
+		<link rel="stylesheet" href="reveal.js/dist/theme/black.css">
+
+		<!-- Theme used for syntax highlighted code -->
+		<link rel="stylesheet" href="reveal.js/plugin/highlight/monokai.css">
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+				<section>
+                    <h1> Snakemake </h1>
+                    A framework for reproducible data analysis
+                </section>
+				<section >
+                    <h2>What is Snakemake?</h2>
+                    <p class = "fragment" align = "left">
+                    A rule based pipeline generator
+                    </p>
+                    <p class = "fragment" align = "left">
+                    Documentation of your processing steps
+                    </p>
+                    <p class = "fragment" align = "left">
+                    A scheduler for tasks
+                    </p>
+                    <p class = "fragment" align = "left">
+                    A utility resolve program dependencies
+                    </p>
+                    <p class = "fragment" align = "left">
+                    A utility for reproducibility and portability
+                    </p>
+                    <p class = "fragment" align = "left">
+                    A way of effectively using computing clusters
+                    </p>
+                </section>
+                <section>
+                    <h2>How does it work?</h2>
+                    <p><strong>RTFM!</strong>  </p>
+                    <p class = "fragment"> Really - there is too much functionality to put it in one presentation and <a href="https://snakemake.readthedocs.io/en/stable/index.html">the documentation</a> is very good!</p>
+                </section>
+                <section>
+                    <h2>How does it work?</h2>
+                    <p class = "fragment" align = "left">
+                        One defines rules which describe a specific processing step in the pipeline
+                    </p>
+                    <p class = "fragment" align = "left">
+                        The rules are combined into a snakefile which is called by snakemake
+                    </p>
+                    <p class = "fragment" align = "left">
+                        From the input and outputs of each rule a DAG is reconstructed
+                    </p>
+                    <p class = "fragment" align = "left">
+                        The DAG is then used to compute each rule in the right order
+                    </p>
+                </section>
+                <section>
+                    <h2>Rule</h2>
+                    <p class = "fragment" align = "left">
+                    <a href = "https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html">Rules</a> are defined in yaml style
+                    </p>
+
+                    <p class = "fragment" align = "left">
+                        It can define different settings
+                    </p>
+                    <ul>
+                        <li class ="fragment" style = "color:red"> Name of the rule </li>
+                        <li class ="fragment" style = "color:red"> Inputs </li>
+                        <li class ="fragment" style = "color:red"> Outputs </li>
+                        <li class ="fragment" style = "color:red"> Processing </li>
+                        <li class ="fragment"> Logfiles</li>
+                        <li class ="fragment"> Additional parameters</li>
+                        <li class ="fragment"> Resource allocations</li>
+                        <li class ="fragment"> Specific environments to use</li>
+                    </ul>
+                </section>
+                <section>
+                    <h2>Snakefile</h2>
+                    <p class = "fragment" align = "left">
+                        The rules are combined to one snakefile - the complete description of the pipeline
+                    </p>
+                    <span class= "fragment" >
+                    <p align = "left">
+                        At the same time, sanity checks are done:
+                    </p>
+                        <ul>
+                            <li class ="fragment"> All initial input files available? </li>
+                            <li class ="fragment"> Are unavailable inputs defined as outputs of other rules?</li>
+                            <li class ="fragment"> What files have already been produced? </li>
+                        </ul>
+                    </span>
+                </section>
+                <section>
+                    <h2>Other notable features</h2>
+                    <p class ="fragment" align = "left">
+                    Snakemake is python based: everywhere within the pipeline one can run python commands
+                    </p>
+                    <p class ="fragment" align = "left">
+                    The use of <a href="https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#wildcards">wildcards</a> makes rules highly reusable and expandable
+                    </p>
+                    <p class ="fragment" align = "left">
+                    <a href = "https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#external-scripts">Integration</a> of <em>R</em>, <em>Python</em>, <em>RMarkdown</em>, <em>Jupyter</em>, <em>Julia</em> scripts into the pipeline
+                    </p>
+                    <p class ="fragment" align = "left">
+                    <a href = "https://snakemake.readthedocs.io/en/stable/snakefiles/configuration.html">Config files</a> can be used to customize the execution of snakemake on several levels
+                    </p>
+                </section>
+                <section>
+                    <h2> The rule </h2>
+                    <pre>
+                        <code data-line-numbers = "1|2|3|4">rule NAME:
+    input: "path/to/inputfile"
+    output: "path/to/outputfile"
+    shell: "somecommand {input} {output}"
+                        </code>
+                    </pre>
+
+                </section>
+                <section>
+                    <h2>The snakefile</h2>
+                    <p>Its "simply" a bunch of rules pasted together.</p>
+                    
+                    <pre><code data-line-numbers = "1-29|1-2|4-20|22-31">rule all:
+    input: "mapped.bam"
+
+rule trim:
+    input: 
+        "raw.read_fwd.fastq",
+        "raw.read_rev.fastq",
+        "adapter.fa"
+    output:
+        "trimmed.read_fwd.fastq",
+        "trimmed.read_fwd_UP.fastq",
+        "trimmed.read_rev.fastq",
+        "trimmed.read_rev_UP.fastq"
+    shell: 
+        """trimmmatic PE {input} {output} \
+        ILLUMINACLIP:{input.adapter}:2:30:10 \
+        LEADING:3 \
+        TRAILING:3 \
+        SLIDINGWINDOW:4:20 MINLEN:36 \
+        -threads 1"""
+
+rule map:
+    input:
+        fwd = "trimmed.read_fwd.fastq",
+        rev = "trimmed.read_rev.fastq",
+    output:
+        "mapped.bam"
+    shell:
+        """bowtie2 -x reference -1 {input.fwd} \
+        -2 {input.rev} -p 1 | \
+        samtools view -Sb > {output}"""
+                    </code></pre>
+                    <span class = "fragment" data-fragment-index = "3">The first rule defines <a href= "https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#targets-and-aggregation">target files</a> for the workflow</span>
+                </section>
+                <section>
+                <h2>Run snakemake</h2>
+                <p class = "fragment">Have all necessary input files correctly linked in the snakefile </p>
+
+                <span class = "fragment">
+                    <p>Have the snakefile in the current directory (or in a subdirectroy workflow) and call:</p>
+                    <pre><code>snakemake --cores 2</code></pre>
+                </span>
+                <span>
+                    <ul>
+                        <li class = "fragment">-n will run it in dry mode (sanity checks and counting of jobs only)</li>
+                        <li class = "fragment">-q will reduce the verbosity</li>
+                    </ul>
+                </span>
+
+                </section>
+                <section>
+                    <h2>Wildcards</h2>
+                    <pre><code data-line-numbers = "1-11|3-4|6">rule map:
+    input:
+        fwd = "trimmed/trimmed.{sample}_fwd.fastq",
+        rev = "trimmed/trimmed.{sample}_rev.fastq",
+    output:
+        temp("results/{sample}.bam")
+    shell:
+        """bowtie2 -x reference -1 {input.fwd} \
+        -2 {input.rev} -p 1 | \
+        samtools view -Sb > {output}"""
+                    </code></pre> 
+                    <p>Wildcards can be used for pattern matching in file names</p>
+                    <p class="fragment">Snakemake will defines wildcards by target files of the workflow - using <code style="color:#b5dc0aff;">.*</code> extension if not properly defined elswere</p>
+                </section>
+                <section>
+                    <h2>Expand</h2>
+                    Make use of wildcards in the first rule for definition of what files to include in the workflow
+                    <pre>
+    <code data-line-numbers = "all|3-4">rule all:
+    input: 
+        expand("results/{samples}.bam",
+        samples = ["sample1","sample2","sample3"])
+    </code>
+                    </pre>
+                    <p class = "fragment">
+                    <code style="color:#b5dc0aff;">samples</code> can be an arbitrary python list
+                    </p>
+                </section>
+                <section>
+                    <h2>Using Python</h2>
+                    <p>It would be tedious to define the list of samples in every snakemake project - use python to read csv-files or similar</p>
+                    <pre><code data-line-numbers = "all">import pandas as pd
+meta = pd.read.csv("resources/meta.csv")
+samples = meta.ID.to_list()
+                    </code></pre>
+                    <p class = "fragment"> Python can be used anywhere in the snakemake file</p>
+                </section>
+                <section>
+                <h2>Include external code</h2>
+                Snakemake can <a href = "https://snakemake.readthedocs.io/en/stable/tutorial/additional_features.html?highlight=include%3A#modularization">include external code</a> - may it be python or rules using the include command
+                <pre>
+    <code>include: "rules/tximport.smk"
+# NOTE: the path is relative to the snakefile</code>
+                </pre>
+                </section>
+                <section>
+                    <h2>Execution of custom code</h2>
+                    <p>The <code style="color:#b5dc0aff;">shell:</code> statment is for running programs available in your <code>$PATH</code></p>
+                    <p class = "fragment">Use <code style="color:#b5dc0aff;">run:</code> to execute python code directly</p>
+                    <p class = "fragment">Use <code style="color:#b5dc0aff;">script:</code> to execute a script and parse rule variables</p>
+                    <p class = "fragment">Use <code style="color:#b5dc0aff;">wrapper:</code> to execute pedefined commands</p>
+                </section>
+                <section>
+                    <h2>Example for <code>run:</code></h2>
+                    <pre>
+    <code data-line-numbers= "all|4-10">rule NAME:
+    input: "path/to/inputfile", "path/to/other/inputfile"
+    output: "path/to/outputfile", somename = "path/to/another/outputfile"
+    run:
+        for f in input:
+            ...
+            with open(output[0], "w") as out:
+                out.write(...)
+        with open(output.somename, "w") as out:
+            out.write(...)
+    </code>
+                    </pre>
+                </section>
+                <section>
+                    <h2>Using scripts</h2>
+                    <pre><code>input: 
+    in = "infile"
+output: "outfile"
+script: "path/to/script" # relative to file of the rule
+                    </code></pre>
+                    <p>Arguments are parsed to <a href = "https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#external-scripts">language specific objects</a>:</p>
+                    <ul>
+                        <li class = "fragment"><b>R</b>: <code style="color:#b5dc0aff;">snakemake@input[["in"]]</code> or <code style="color:#b5dc0aff;">snakemake@input[[1]]</code></li>
+                        <li class = "fragment"><b>Python</b>: <code style="color:#b5dc0aff;">snakemake.input["in"]</code> or <code style="color:#b5dc0aff;">snakemake.input[0]</code></li>
+                        <li class = "fragment"><b>Julia</b>: <code style="color:#b5dc0aff;">snakemake.input["in"]</code style="color:#b5dc0aff;"> or <code style="color:#b5dc0aff;">snakemake.input[1] (???)</code></li>
+                    </ul>
+                </section>
+                <section>
+                    <h2>Using wrappers</h2>
+                    <pre><code>input: "mapping.bam"
+output: "mapping_sort.bam"
+threads: 2
+params: "-m 4G"
+wrapper:  ""0.2.0/bio/samtools/sort"
+                    </code></pre>
+                    <p>
+                    <a href = "https://snakemake.readthedocs.io/en/stable/snakefiles/modularization.html#wrappers">Wrappers</a> are predefined and provided as a repository at <a href ="https://github.com/snakemake/snakemake-wrappers/tree/master">github: snakemake/snakemake-wrappers/tree/master</a>
+                    </p>
+                </section>
+                <section>
+                    <h2>Other declarations in rules</h2>
+                    <p align = "left"><code style="color:#b5dc0aff;">log:</code> - used to define <a href = "https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#log-files">log files</a></p> 
+                    <p class = "fragment" align = "left"><code style="color:#b5dc0aff;">conda:</code> - defines yaml/json file with <a href = "https://snakemake.readthedocs.io/en/stable/snakefiles/deployment.html#integrated-package-management">conda dependencies</a> needed to execute rule </p> 
+                    <p class = "fragment" align = "left"><code style="color:#b5dc0aff;">threads:</code> - defines the maximum <a href = "https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#threads">number of cores</a> for the rule (default = 1) - scaled down if needed</p> 
+                    <p class = "fragment" align = "left"><code style="color:#b5dc0aff;">params:</code> - defines <a href = "https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#non-file-parameters-for-rules">additional parameters</a> which should be parsed to the rule execution</p> 
+                    <p class = "fragment" align = "left"><code style="color:#b5dc0aff;">resources:</code> - defines <a href = "https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#resources">allocation of resources</a> for the rule - handy for cluster execution</p> 
+                </section>
+                <section>
+                <h2>File markups</h2>
+                <p>Output files can be marked for specific handling</p>
+                <p align ="left" class = "fragment"><code style="color:#b5dc0aff;">temp()</code> - marks temporary files, which are deleted after dependending jobs have finished</p>
+                <p align ="left" class = "fragment"><code style="color:#b5dc0aff;">protected()</code> - marks write protected files, usually for long lasting tasks</p>
+                <p align ="left" class = "fragment"><code style="color:#b5dc0aff;">directory()</code> - marks directories as output</p>
+                <p align ="left" class = "fragment"><code style="color:#b5dc0aff;">report()</code> - marks files to be integrated in the report</p>
+                </section>
+                <section>
+                <h2> Useful tags for snakemake <a href = "https://snakemake.readthedocs.io/en/stable/executing/cli.html">execution</a></h2>
+                <p align ="left" class = "fragment">
+                <code style="color:#b5dc0aff;">--dryrun | -n</code> - do sanity checks and report job counts without executing the rules
+                </p>
+                <p align ="left" class = "fragment">
+                <code style="color:#b5dc0aff;">--cores | -N</code> - how many cores are provided to snakemake</p>
+                <p align ="left" class = "fragment">
+                <code style="color:#b5dc0aff;">--use-conda</code> - tells snakemake to download and use conda envrionments</p>
+                </section>
+                <section>
+                    <h2> Useful tags for snakemake <a href = "https://snakemake.readthedocs.io/en/stable/executing/cli.html">execution</a></h2>
+                <p align ="left" class = "fragment">
+                <code style="color:#b5dc0aff;">--report</code> - generates a self contained html reporting the current state of the workflow</p>
+                <p align ="left" class = "fragment">
+                <code style="color:#b5dc0aff;">--profile</code> - specifies which profile (predefined options to execute)</p>
+                <p align ="left" class = "fragment">
+                <code style="color:#b5dc0aff;">--cluster</code> - tells snakemake to switch to cluster execution mode</p>
+                </section>
+                <section>
+                    <h2>Best practicses</h2>
+                    <p>Run <code style="color:#b5dc0aff;">snakemake --lint</code> befor publishing <a href = "https://snakemake.readthedocs.io/en/stable/snakefiles/best_practices.html">(here)</a></p>
+                    <p>Follow this <a href = "https://snakemake.readthedocs.io/en/stable/snakefiles/deployment.html">directory tree</a>:</p>
+                   <pre><code data-lines-numbers>.
+├── config          # config files
+├── logs            # logfiles for each job here
+├── resources       # files to start the workflow with
+├── results         # resulting data files
+|   ├── reports     # reports here
+|   └── plots       # plots here
+└── workflow        # files to define the workflow
+    ├── envs        # files for conda environments
+    ├── notebooks   # files for Rmarkdown/Jupyter
+    ├── report      # rst files for descriptions in reports 
+    ├── rules       # files for rules
+    └── scripts     # files for R/Python/Julia
+                    </code></pre>
+                </section>
+                <section>
+                    <h2> Exercises </h2>
+                    <ol>
+                        <li> Find the snakemake file in the <i>tutorial_snakemake</i> directory. Open it in an editor and try to understand what is being done. Investigate the inputs! </li>
+                        <li> Run the pipeline! That might take several minutes.</li>
+                        <li> Generate a report of the current pipeline!</li>
+                        <li> Write your own rule: plot a histogram of only the tumor samples.</li>
+                        <li> Generate a new report and include the plot! </li>
+                        <li> Write your own rule: generate a fastqc report for each sample - before and after trimming!</li>
+                    </ol>
+                </section>
+			</div>
+		</div>
+
+		<script src="reveal.js/dist/reveal.js"></script>
+		<script src="reveal.js/plugin/notes/notes.js"></script>
+		<script src="reveal.js/plugin/markdown/markdown.js"></script>
+		<script src="reveal.js/plugin/highlight/highlight.js"></script>
+		<script>
+			// More info about initialization & config:
+			// - https://revealjs.com/initialization/
+			// - https://revealjs.com/config/
+			Reveal.initialize({
+				hash: true,
+
+				// Learn about plugins: https://revealjs.com/plugins/
+				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ]
+			});
+		</script>
+	</body>
+</html>

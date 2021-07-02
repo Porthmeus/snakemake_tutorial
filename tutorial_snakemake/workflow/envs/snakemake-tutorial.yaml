@@ -1,0 +1,12 @@
+channels:
+    - conda-forge
+    - bioconda
+dependencies:
+    - bowtie2
+    - snakemake
+    - samtools
+    - trimmomatic
+    - salmon
+    - bioconductor-tximport
+    - bioconductor-deseq2
+    - fastqc
