@@ -11,7 +11,7 @@
 
 <meta name="author" content="Jan Taubenheim" />
 
-<meta name="date" content="2021-06-30" />
+<meta name="date" content="2021-07-02" />
 
 <title>Snakemake setup guide</title>
 
@@ -351,7 +351,7 @@ pre code {
 
 <h1 class="title toc-ignore">Snakemake setup guide</h1>
 <h4 class="author">Jan Taubenheim</h4>
-<h4 class="date">2021-06-30</h4>
+<h4 class="date">2021-07-02</h4>
 
 </div>
 
@@ -389,7 +389,7 @@ mamba create -c conda-forge -c bioconda -n snakemake snakemake</code></pre>
 <pre class="bash"><code># activate the base environment
 conda activate base
 # install the necessary tools - including snakemake
-mamba create -n snakemake-tutoral --file snakemake-tutorial.yaml</code></pre>
+mamba env create -n snakemake-tutorial --file tutorial_snakemake/workflow/env/snakemake-tutorial.yaml</code></pre>
 </div>
 </div>
 <div id="cluster-setup-slurm" class="section level1">

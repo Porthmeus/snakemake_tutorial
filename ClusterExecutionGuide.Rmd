@@ -47,7 +47,7 @@ We will use conda as well to install all necessary tools which we need for this 
 # activate the base environment
 conda activate base
 # install the necessary tools - including snakemake
-mamba create -n snakemake-tutoral --file snakemake-tutorial.yaml
+mamba env create -n snakemake-tutorial --file tutorial_snakemake/workflow/env/snakemake-tutorial.yaml
 ```
 
 

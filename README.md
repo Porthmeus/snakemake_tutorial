@@ -21,7 +21,7 @@ With mamba install all necessary packages into an new environment called "snakem
 
 ```
 conda activate base
-mamba env create -n snakemake-tutorial --file tutorial_snakemake/workflow/env/snakemake-tutorial.yaml
+mamba env create --file tutorial_snakemake/workflow/envs/snakemake-tutorial.yaml -n snakemake-tutorial 
 ```
 
 To use the environment (and snakemake) call:
