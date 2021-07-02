@@ -13,7 +13,7 @@ conda install -n base -c conda-forge mamba
 Download this repository either by downloading from the website or use:
 
 ```
-git clone github.com/Porthmeus/snakemake_tutorial; cd snakemake_tutorial
+git clone https://github.com/Porthmeus/snakemake_tutorial; cd snakemake_tutorial
 ```
 
 
