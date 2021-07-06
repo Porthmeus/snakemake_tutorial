@@ -41,6 +41,12 @@
                     A way of effectively using computing clusters
                     </p>
                 </section>
+				<section >
+                    <h2>What is Snakemake?</h2>
+                    <img data-src="ExampleWorkflow.png"
+                    width = "500"
+                    height = "500">
+                </section>
                 <section>
                     <h2>How does it work?</h2>
                     <p><strong>RTFM!</strong>  </p>
@@ -132,16 +138,16 @@
 
 rule trim:
     input: 
-        "raw.read_fwd.fastq",
-        "raw.read_rev.fastq",
-        "adapter.fa"
+        raw = ["raw.read_fwd.fastq",
+        "raw.read_rev.fastq"],
+        adapter = "adapter.fa"
     output:
         "trimmed.read_fwd.fastq",
         "trimmed.read_fwd_UP.fastq",
         "trimmed.read_rev.fastq",
         "trimmed.read_rev_UP.fastq"
     shell: 
-        """trimmmatic PE {input} {output} \
+        """trimmomatic PE {input.raw} {output} \
         ILLUMINACLIP:{input.adapter}:2:30:10 \
         LEADING:3 \
         TRAILING:3 \
@@ -181,17 +187,17 @@ rule map:
                     <h2>Wildcards</h2>
                     <pre><code data-line-numbers = "1-11|3-4|6">rule map:
     input:
-        fwd = "trimmed/trimmed.{sample}_fwd.fastq",
-        rev = "trimmed/trimmed.{sample}_rev.fastq",
+        fwd = "trimmed.{sample}_fwd.fastq",
+        rev = "trimmed.{sample}_rev.fastq",
     output:
-        temp("results/{sample}.bam")
+        "{sample}.bam"
     shell:
         """bowtie2 -x reference -1 {input.fwd} \
         -2 {input.rev} -p 1 | \
         samtools view -Sb > {output}"""
                     </code></pre> 
-                    <p>Wildcards can be used for pattern matching in file names</p>
-                    <p class="fragment">Snakemake will defines wildcards by target files of the workflow - using <code style="color:#b5dc0aff;">.*</code> extension if not properly defined elswere</p>
+                    <p>Wildcards are used for pattern matching - each job is repeated for each pattern found</p>
+                    <p class="fragment">Snakemake will defines wildcards by target files of the workflow - using <code style="color:#b5dc0aff;">.*</code> extension if not properly defined elsewere</p>
                 </section>
                 <section>
                     <h2>Expand</h2>
@@ -199,7 +205,7 @@ rule map:
                     <pre>
     <code data-line-numbers = "all|3-4">rule all:
     input: 
-        expand("results/{samples}.bam",
+        expand("{samples}.bam",
         samples = ["sample1","sample2","sample3"])
     </code>
                     </pre>
@@ -267,7 +273,7 @@ script: "path/to/script" # relative to file of the rule
 output: "mapping_sort.bam"
 threads: 2
 params: "-m 4G"
-wrapper:  ""0.2.0/bio/samtools/sort"
+wrapper:  "0.2.0/bio/samtools/sort"
                     </code></pre>
                     <p>
                     <a href = "https://snakemake.readthedocs.io/en/stable/snakefiles/modularization.html#wrappers">Wrappers</a> are predefined and provided as a repository at <a href ="https://github.com/snakemake/snakemake-wrappers/tree/master">github: snakemake/snakemake-wrappers/tree/master</a>
@@ -275,11 +281,11 @@ wrapper:  ""0.2.0/bio/samtools/sort"
                 </section>
                 <section>
                     <h2>Other declarations in rules</h2>
-                    <p align = "left"><code style="color:#b5dc0aff;">log:</code> - used to define <a href = "https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#log-files">log files</a></p> 
-                    <p class = "fragment" align = "left"><code style="color:#b5dc0aff;">conda:</code> - defines yaml/json file with <a href = "https://snakemake.readthedocs.io/en/stable/snakefiles/deployment.html#integrated-package-management">conda dependencies</a> needed to execute rule </p> 
-                    <p class = "fragment" align = "left"><code style="color:#b5dc0aff;">threads:</code> - defines the maximum <a href = "https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#threads">number of cores</a> for the rule (default = 1) - scaled down if needed</p> 
-                    <p class = "fragment" align = "left"><code style="color:#b5dc0aff;">params:</code> - defines <a href = "https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#non-file-parameters-for-rules">additional parameters</a> which should be parsed to the rule execution</p> 
-                    <p class = "fragment" align = "left"><code style="color:#b5dc0aff;">resources:</code> - defines <a href = "https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#resources">allocation of resources</a> for the rule - handy for cluster execution</p> 
+                    <p align = "left"><code style="color:#b5dc0aff;">log:</code> used to define <a href = "https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#log-files">log files</a></p> 
+                    <p class = "fragment" align = "left"><code style="color:#b5dc0aff;">conda:</code> defines yaml/json file with <a href = "https://snakemake.readthedocs.io/en/stable/snakefiles/deployment.html#integrated-package-management">conda dependencies</a> needed to execute rule </p> 
+                    <p class = "fragment" align = "left"><code style="color:#b5dc0aff;">threads:</code> defines the maximum <a href = "https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#threads">number of cores</a> for the rule (default = 1) scaled down if needed</p> 
+                    <p class = "fragment" align = "left"><code style="color:#b5dc0aff;">params:</code> defines <a href = "https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#non-file-parameters-for-rules">additional parameters</a> which should be parsed to the rule execution</p> 
+                    <p class = "fragment" align = "left"><code style="color:#b5dc0aff;">resources:</code> defines <a href = "https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#resources">allocation of resources</a> for the rule - handy for cluster execution</p> 
                 </section>
                 <section>
                 <h2>File markups</h2>
@@ -326,6 +332,13 @@ wrapper:  ""0.2.0/bio/samtools/sort"
     ├── rules       # files for rules
     └── scripts     # files for R/Python/Julia
                     </code></pre>
+                </section>
+                <section>
+                    <h2>Cluster execution</h2>
+                    <p> I provided a html called <a href="ClusterExecutionGuide.html">ClusterExecutionGuide</a> - use it to set up snakemake for cluster execution</p>
+                    <p class = "fragment">Call: <code style = "color:#b5dc0aff;">snakemake --profile NameOfClusterProfile</code> to execute snakemake</p>
+                    <p class = "fragment"> Consider submitting the snakemake head job to slurm as dedicated job on the computing nodes</p>
+                    <p class = "fragment"> Be aware that the computing nodes have no internet connection - in case you want download and install environments automatically</p>
                 </section>
                 <section>
                     <h2> Exercises </h2>
